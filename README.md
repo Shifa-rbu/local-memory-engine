@@ -145,6 +145,7 @@ This is a small test set, not proof of perfect performance on unseen conversatio
 - The local API has no authentication and is intended for use on the developer’s computer.
 - Recall compares the query with active memories one at a time. This would become slow with very large collections. A vector index such as FAISS or sqlite-vec could be explored later.
 - The relevance threshold and query expansion need testing on a larger, independently written test set.
+With 10 million memories, the first bottleneck would be retrieval latency. The current implementation compares the query with every active memory one by one. I would use an approximate-nearest-neighbor index such as FAISS or sqlite-vec to find candidate memories faster, while keeping SQLite for memory text and metadata. I would benchmark retrieval speed and result quality before choosing an index. This project does not currently implement or benchmark that solution.
 
 ## Privacy
 
