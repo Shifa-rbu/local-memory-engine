@@ -1,4 +1,4 @@
-﻿import re
+import re
 from dataclasses import dataclass
 
 
@@ -32,9 +32,43 @@ def extract_memories(message: str) -> list[MemoryCandidate]:
     # Example: "I use Arch Linux."
     match = re.search(r"\bI\s+(?:use|run)\s+(.+)", text, re.IGNORECASE)
     if match:
+        raw_os = match.group(1).strip()
+        known_operating_systems = [
+            ("windows 11", "Windows 11"),
+            ("windows 10", "Windows 10"),
+            ("linux mint", "Linux Mint"),
+            ("arch linux", "Arch Linux"),
+            ("fedora linux", "Fedora Linux"),
+            ("elementary os", "elementary OS"),
+            ("chrome os", "Chrome OS"),
+            ("chromeos", "Chrome OS"),
+            ("pop os", "Pop!_OS"),
+            ("ubuntu", "Ubuntu"),
+            ("debian", "Debian"),
+            ("fedora", "Fedora"),
+            ("windows", "Windows"),
+            ("macos", "macOS"),
+            ("mac os", "macOS"),
+            ("nixos", "NixOS"),
+            ("opensuse", "openSUSE"),
+            ("manjaro", "Manjaro"),
+            ("linux", "Linux"),
+            ("android", "Android"),
+            ("ios", "iOS"),
+        ]
+        normalized_os = next(
+            (
+                label
+                for prefix, label in known_operating_systems
+                if raw_os.lower().startswith(prefix)
+            ),
+            None,
+        )
+        if normalized_os is None:
+            return []
         return [
             MemoryCandidate(
-                text=f"User uses {match.group(1).strip()}",
+                text=f"User uses {normalized_os}",
                 memory_type="fact",
                 slot="operating_system",
             )
@@ -64,11 +98,34 @@ def extract_memories(message: str) -> list[MemoryCandidate]:
         re.IGNORECASE,
     )
     if match:
+        preference = match.group(1).strip()
+        value = preference.lower()
+        categories = {
+            "programming_language": (
+                "python", "java", "javascript", "typescript",
+                "c++", "c#", "rust", "golang",
+            ),
+            "database": (
+                "postgresql", "postgres", "mysql", "sqlite",
+                "mongodb", "redis",
+            ),
+            "theme": ("dark mode", "light mode"),
+            "drink": ("tea", "coffee"),
+        }
+        category = next(
+            (
+                name
+                for name, terms in categories.items()
+                if any(term in value for term in terms)
+            ),
+            None,
+        )
+        slot = f"preference:{category}" if category else None
         return [
             MemoryCandidate(
-                text=f"User prefers {match.group(1).strip()}",
+                text=f"User prefers {preference}",
                 memory_type="preference",
-                slot="preference",
+                slot=slot,
             )
         ]
 
@@ -79,7 +136,7 @@ def extract_memories(message: str) -> list[MemoryCandidate]:
             MemoryCandidate(
                 text=f"User is building {match.group(1).strip()}",
                 memory_type="project",
-                slot="project",
+                slot=None,
             )
         ]
 
